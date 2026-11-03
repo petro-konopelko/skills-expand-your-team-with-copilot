@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const timeFilters = document.querySelectorAll(".time-filter");
   const difficultyFilters = document.querySelectorAll(".difficulty-filter");
 
-  // Authentication elements
+  // Authentication and theme elements
   const loginButton = document.getElementById("login-button");
   const userInfo = document.getElementById("user-info");
   const displayName = document.getElementById("display-name");
@@ -25,6 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const themeToggle = document.getElementById("theme-toggle");
+  const themeIcon = themeToggle.querySelector(".theme-icon");
+  const themeLabel = themeToggle.querySelector(".theme-label");
 
   // Activity categories with corresponding colors
   const activityTypes = {
@@ -104,6 +107,41 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     fetchActivities();
+  }
+
+  // Theme state and persistence
+  function getPreferredTheme() {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark" || savedTheme === "light") {
+      return savedTheme;
+    }
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
+
+  function applyTheme(theme) {
+    const isDarkMode = theme === "dark";
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    themeToggle.setAttribute("aria-pressed", String(isDarkMode));
+    themeToggle.setAttribute(
+      "aria-label",
+      isDarkMode ? "Switch to light mode" : "Switch to dark mode"
+    );
+    themeIcon.textContent = isDarkMode ? "☀️" : "🌙";
+    themeLabel.textContent = isDarkMode ? "Light mode" : "Dark mode";
+    localStorage.setItem("theme", theme);
+  }
+
+  function initializeTheme() {
+    applyTheme(getPreferredTheme());
+    themeToggle.addEventListener("click", () => {
+      const nextTheme = document.body.classList.contains("dark-mode")
+        ? "light"
+        : "dark";
+      applyTheme(nextTheme);
+    });
   }
 
   function setDifficultyFilter(difficulty) {
@@ -691,6 +729,18 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Add event listeners for difficulty filter buttons
+  difficultyFilters.forEach((button) => {
+    button.addEventListener("click", () => {
+      // Update active class
+      difficultyFilters.forEach((btn) => btn.classList.remove("active"));
+      button.classList.add("active");
+
+      // Update current difficulty and fetch activities
+      setDifficultyFilter(button.dataset.difficulty);
+    });
+  });
+
   // Open registration modal
   function openRegistrationModal(activityName) {
     modalActivityName.textContent = activityName;
@@ -912,6 +962,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Initialize app
+  initializeTheme();
   checkAuthentication();
   initializeFilters();
   fetchActivities();
