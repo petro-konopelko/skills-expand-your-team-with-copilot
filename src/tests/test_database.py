@@ -14,7 +14,7 @@ class MangaManiacsDatabaseTest(unittest.TestCase):
 
         self.assertEqual(
             activity["description"],
-            "Explore the fantastic stories of the most interesting characters from Japanese Manga (graphic novels).",
+            "Embark on epic adventures with unforgettable heroes, rivalries, and hidden powers from the world of Japanese manga and graphic novels.",
         )
         self.assertEqual(activity["max_participants"], 15)
         self.assertEqual(activity["participants"], [])
