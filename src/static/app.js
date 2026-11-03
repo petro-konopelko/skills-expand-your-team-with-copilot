@@ -43,6 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Authentication state
   let currentUser = null;
+  let sharedActivityFromUrl = "";
+  let hasFocusedSharedActivity = false;
 
   // Time range mappings for the dropdown
   const timeRanges = {
@@ -96,6 +98,113 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     fetchActivities();
+  }
+
+  function getSharedActivityFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedActivity = urlParams.get("activity");
+    return sharedActivity ? sharedActivity.trim() : "";
+  }
+
+  function createActivityShareUrl(activityName) {
+    const shareUrl = new URL(window.location.pathname, window.location.origin);
+    shareUrl.searchParams.set("activity", activityName);
+    return shareUrl.toString();
+  }
+
+  function initializeSharedActivity() {
+    sharedActivityFromUrl = getSharedActivityFromUrl();
+
+    if (!sharedActivityFromUrl) {
+      return;
+    }
+
+    searchQuery = sharedActivityFromUrl;
+    searchInput.value = sharedActivityFromUrl;
+  }
+
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textArea);
+    return copied;
+  }
+
+  async function copyActivityLink(activityName) {
+    const shareUrl = createActivityShareUrl(activityName);
+
+    try {
+      const copied = await copyTextToClipboard(shareUrl);
+      if (copied) {
+        showMessage("Activity link copied. You can now share it!", "success");
+      } else {
+        showMessage("Couldn't copy the link. Please copy it manually.", "error");
+      }
+    } catch (error) {
+      showMessage("Couldn't copy the link. Please copy it manually.", "error");
+      console.error("Error copying activity link:", error);
+    }
+  }
+
+  async function handleNativeShare(event) {
+    const activityName = event.currentTarget.dataset.activity;
+    const shareUrl = createActivityShareUrl(activityName);
+    const shareTitle = `Check out ${activityName} at Mergington High School`;
+
+    if (!navigator.share) {
+      await copyActivityLink(activityName);
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: shareTitle,
+        text: shareTitle,
+        url: shareUrl,
+      });
+    } catch (error) {
+      if (error.name === "AbortError") {
+        return;
+      }
+
+      await copyActivityLink(activityName);
+    }
+  }
+
+  async function handleCopyActivityLink(event) {
+    const activityName = event.currentTarget.dataset.activity;
+    await copyActivityLink(activityName);
+  }
+
+  function focusSharedActivityCard() {
+    if (!sharedActivityFromUrl || hasFocusedSharedActivity) {
+      return;
+    }
+
+    const cards = Array.from(activitiesList.querySelectorAll(".activity-card"));
+    const matchingCard = cards.find(
+      (card) =>
+        card.dataset.activityName.toLowerCase() ===
+        sharedActivityFromUrl.toLowerCase()
+    );
+
+    if (!matchingCard) {
+      return;
+    }
+
+    matchingCard.classList.add("shared-activity-highlight");
+    matchingCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    hasFocusedSharedActivity = true;
   }
 
   // Check if user is already logged in (from localStorage)
@@ -473,12 +582,15 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    focusSharedActivityCard();
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    activityCard.dataset.activityName = name;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -501,6 +613,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareUrl = createActivityShareUrl(name);
+    const emailSubject = encodeURIComponent(
+      `Check out ${name} at Mergington High School`
+    );
+    const emailBody = encodeURIComponent(
+      `I thought you might like this activity:\n\n${name}\n${details.description}\n\nSchedule: ${formattedSchedule}\n\n${shareUrl}`
+    );
 
     // Create activity tag
     const tagHtml = `
@@ -555,6 +674,17 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-actions">
+        <button class="share-button native-share-button" data-activity="${name}" type="button">
+          Share
+        </button>
+        <button class="share-button copy-link-button" data-activity="${name}" type="button">
+          Copy Link
+        </button>
+        <a class="share-button share-link-button" href="mailto:?subject=${emailSubject}&body=${emailBody}">
+          Email
+        </a>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -589,6 +719,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    const nativeShareButton = activityCard.querySelector(".native-share-button");
+    nativeShareButton.addEventListener("click", handleNativeShare);
+
+    const copyLinkButton = activityCard.querySelector(".copy-link-button");
+    copyLinkButton.addEventListener("click", handleCopyActivityLink);
 
     activitiesList.appendChild(activityCard);
   }
@@ -867,5 +1003,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize app
   checkAuthentication();
   initializeFilters();
+  initializeSharedActivity();
   fetchActivities();
 });
