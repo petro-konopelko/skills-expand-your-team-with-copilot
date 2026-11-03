@@ -1,11 +1,13 @@
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from backend.database import initial_activities
+from backend.routers.activities import get_activities
 
 
 class MangaManiacsDatabaseTest(unittest.TestCase):
@@ -32,6 +34,25 @@ class MangaManiacsDatabaseTest(unittest.TestCase):
         self.assertIn("body.dark-mode", styles_css)
         self.assertIn("localStorage.setItem(\"theme\", theme)", app_js)
         self.assertIn('document.body.classList.toggle("dark-mode", isDarkMode)', app_js)
+
+    def test_activity_difficulty_is_optional_and_filter_uses_unspecified_all(self):
+        self.assertIn("difficulty", initial_activities["Programming Class"])
+        self.assertNotIn("difficulty", initial_activities["Art Club"])
+
+        with patch("backend.routers.activities.activities_collection.find") as find_mock:
+            find_mock.side_effect = [
+                [{"_id": "Beginner Club", "description": "Intro", "difficulty": "Beginner"}],
+                [{"_id": "Open Club", "description": "For everyone"}],
+            ]
+
+            beginner_results = get_activities(difficulty="Beginner")
+            all_results = get_activities(difficulty="all")
+
+        self.assertEqual(find_mock.call_count, 2)
+        self.assertEqual(find_mock.call_args_list[0].args[0], {"difficulty": "Beginner"})
+        self.assertEqual(find_mock.call_args_list[1].args[0], {"difficulty": {"$exists": False}})
+        self.assertEqual(list(beginner_results.keys()), ["Beginner Club"])
+        self.assertEqual(list(all_results.keys()), ["Open Club"])
 
 
 if __name__ == "__main__":
