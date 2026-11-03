@@ -40,6 +40,7 @@ initial_activities = {
             "start_time": "15:15",
             "end_time": "16:45"
         },
+        "difficulty": "Beginner",
         "max_participants": 12,
         "participants": ["michael@mergington.edu", "daniel@mergington.edu"]
     },
@@ -51,6 +52,7 @@ initial_activities = {
             "start_time": "07:00",
             "end_time": "08:00"
         },
+        "difficulty": "Intermediate",
         "max_participants": 20,
         "participants": ["emma@mergington.edu", "sophia@mergington.edu"]
     },
@@ -62,6 +64,7 @@ initial_activities = {
             "start_time": "06:30",
             "end_time": "07:45"
         },
+        "difficulty": "Beginner",
         "max_participants": 30,
         "participants": ["john@mergington.edu", "olivia@mergington.edu"]
     },
@@ -73,6 +76,7 @@ initial_activities = {
             "start_time": "15:30",
             "end_time": "17:30"
         },
+        "difficulty": "Intermediate",
         "max_participants": 22,
         "participants": ["liam@mergington.edu", "noah@mergington.edu"]
     },
@@ -128,6 +132,7 @@ initial_activities = {
             "start_time": "07:15",
             "end_time": "08:00"
         },
+        "difficulty": "Advanced",
         "max_participants": 10,
         "participants": ["james@mergington.edu", "benjamin@mergington.edu"]
     },
@@ -150,6 +155,7 @@ initial_activities = {
             "start_time": "10:00",
             "end_time": "14:00"
         },
+        "difficulty": "Advanced",
         "max_participants": 15,
         "participants": ["ethan@mergington.edu", "oliver@mergington.edu"]
     },
@@ -161,6 +167,7 @@ initial_activities = {
             "start_time": "13:00",
             "end_time": "16:00"
         },
+        "difficulty": "Advanced",
         "max_participants": 18,
         "participants": ["isabella@mergington.edu", "lucas@mergington.edu"]
     },
