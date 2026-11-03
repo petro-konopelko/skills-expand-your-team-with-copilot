@@ -22,6 +22,17 @@ class MangaManiacsDatabaseTest(unittest.TestCase):
         self.assertEqual(activity["schedule_details"]["start_time"], "19:00")
         self.assertEqual(activity["schedule_details"]["end_time"], "20:30")
 
+    def test_dark_mode_toggle_is_defined_in_frontend(self):
+        index_html = ROOT.joinpath("static/index.html").read_text(encoding="utf-8")
+        styles_css = ROOT.joinpath("static/styles.css").read_text(encoding="utf-8")
+        app_js = ROOT.joinpath("static/app.js").read_text(encoding="utf-8")
+
+        self.assertIn('id="theme-toggle"', index_html)
+        self.assertIn("Dark mode", index_html)
+        self.assertIn("body.dark-mode", styles_css)
+        self.assertIn("localStorage.setItem(\"theme\", theme)", app_js)
+        self.assertIn('document.body.classList.toggle("dark-mode", isDarkMode)', app_js)
+
 
 if __name__ == "__main__":
     unittest.main()
